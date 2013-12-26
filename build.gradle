@@ -1,0 +1,200 @@
+def localIvyRepoUri = uri("$rootProject.projectDir/../ivy_repository");
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    // https://github.com/michel-kraemer/gradle-download-task
+    classpath 'de.undercouch:gradle-download-task:0.4'
+  }
+}
+
+import de.undercouch.gradle.tasks.download.Download;
+
+ext.currentPlatform = getCurrentPlatform();
+
+project(':libodb') {
+    version = '2.3.0';
+
+    ext {
+        archiveName = "libodb-${version}.zip";
+        vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName";
+        explodedDirName = "libodb-${version}";
+        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+
+        configureCommandLine = [
+            "./configure",
+            "--prefix=${-> platformInstallDir}",
+            "--host=${-> platform}",
+            "--build=${-> currentPlatform}",
+            "--disable-shared",
+            "--enable-static",
+            "--disable-threads",
+            ];
+    }
+}
+
+project(':sqlite3') {
+    version = '3080200';
+
+    ext {
+        archiveName = "sqlite-autoconf-${version}.tar.gz";
+        vendorUrl = "http://www.sqlite.org/2013/$archiveName";
+        explodedDirName = "sqlite-autoconf-${version}";
+        targetPlatforms = ['arm-linux-androideabi'];
+
+        configureCommandLine = [
+            "./configure",
+            "--prefix=${-> platformInstallDir}",
+            "--host=${-> platform}",
+            "--build=${-> currentPlatform}",
+            "--disable-shared",
+            "--enable-static",
+            "CFLAGS=-DSQLITE_ENABLE_UNLOCK_NOTIFY=1",
+            ];
+    }
+}
+
+// apply the following to all subprojects in settings.gradle
+// using the values specified above
+subprojects {
+    apply plugin: 'cpp';
+    apply plugin: 'ivy-publish';
+
+    group = 'me.sgeb.opencash.vendor';
+
+    repositories {
+        ivy {
+            url localIvyRepoUri;
+        }
+    }
+
+    publishing {
+        repositories {
+            ivy {
+                url localIvyRepoUri;
+            }
+        }
+    }
+
+    task testResolveDependencies << {
+        println "Testing dependency resolution";
+        configurations.each { conf ->
+            println "=> $conf:";
+            conf.files.each { println "   -> $it" }
+        }
+    }
+
+    task download(type: Download) {
+        outputs.files file("$buildDir/$archiveName");
+        src vendorUrl;
+        dest buildDir;
+        overwrite false;
+    }
+
+    targetPlatforms.each {
+        ext.platform = it;
+        ext.platformDir = file("$buildDir/$platform");
+        ext.platformSrcDir = file("$platformDir/$explodedDirName");
+        ext.platformInstallDir = file("$platformDir/install");
+
+        if (!gccExists(platform)) {
+            def compiler = getGcc(platform);
+            logger.info("==============");
+            logger.info("Configuring build for platform '$platform':");
+            logger.info("Cross-compiling but could not find '$compiler'.");
+            logger.info("Please add your cross-compilation toolchain"
+                        + " to your \$PATH");
+            logger.info("Skipping platform '$platform'");
+            logger.info("==============");
+            return;
+        }
+
+        task ("unarchive-$platform", type: Copy, dependsOn: download) {
+            inputs.files download.outputs.files.singleFile;
+            outputs.files platformSrcDir;
+
+            def f = download.outputs.files.singleFile;
+            def t = f.name.endsWith('.zip') ?
+                zipTree(f) : tarTree(f);
+
+            from t;
+            into platformDir;
+        }
+
+        task("configure-$platform", type: Exec,
+                dependsOn: "unarchive-$platform")
+        {
+            // Evaluate lazy GString to interpolate current
+            // project values
+            def cmdLine = configureCommandLine*.toString();
+
+            logging.captureStandardOutput LogLevel.INFO;
+            logging.captureStandardError LogLevel.INFO;
+
+            workingDir platformSrcDir;
+            commandLine cmdLine;
+            outputs.files file("$platformSrcDir/Makefile");
+        }
+
+        task ("assemble-$platform", type: Exec,
+                dependsOn: "configure-$platform")
+        {
+            logging.captureStandardOutput LogLevel.INFO;
+            logging.captureStandardError LogLevel.INFO;
+
+            workingDir platformSrcDir;
+            commandLine 'make', 'all', 'install';
+        }
+
+        def platformPackage = task ("package-$platform", type: Zip,
+                dependsOn: "assemble-$platform")
+        {
+            from platformInstallDir;
+            baseName project.name;
+            version version;
+            classifier platform;
+            extension 'nar';
+        }
+
+        publishing {
+            publications {
+                def p = findByName(project.name);
+                if (p == null) {
+                    p = create(project.name, IvyPublication);
+                }
+                p.artifact platformPackage;
+            }
+        }
+    }
+
+}
+
+def getCurrentPlatform() {
+    def stdout = new ByteArrayOutputStream();
+    exec {
+        commandLine 'gcc', '-dumpmachine';
+        standardOutput = stdout;
+    }
+    stdout.toString().trim();
+}
+
+def getGcc(platform) {
+    def compiler = "g++";
+    if (platform != currentPlatform) {
+        compiler = "$platform-$compiler";
+    }
+    return compiler;
+}
+
+def gccExists(platform) {
+    def compiler = getGcc(platform);
+    def stdout = new ByteArrayOutputStream();
+    def findCompiler = exec {
+        commandLine 'which', "$compiler";
+        ignoreExitValue true;
+        standardOutput = stdout;
+    }
+    findCompiler.exitValue == 0
+}
