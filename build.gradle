@@ -35,6 +35,35 @@ project(':libodb') {
     }
 }
 
+project(':libodb-sqlite') {
+    version = '2.3.0';
+
+    ext {
+        archiveName = "libodb-sqlite-${version}.zip";
+        vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName";
+        explodedDirName = "libodb-sqlite-${version}";
+        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+        narDependencies = [
+            'all':
+                ["me.sgeb.opencash.vendor:libodb:$version:${-> platform}@nar"],
+            'arm-linux-androideabi':
+                ["me.sgeb.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
+            ];
+
+        configureCommandLine = [
+            "./configure",
+            "--prefix=${-> platformInstallDir}",
+            "--host=${-> platform}",
+            "--build=${-> currentPlatform}",
+            "--disable-shared",
+            "--enable-static",
+            "--disable-threads",
+            "LDFLAGS=-L${-> platformDepsDir}/lib",
+            "CPPFLAGS=-I${-> platformDepsDir}/include",
+            ];
+    }
+}
+
 project(':sqlite3') {
     version = '3080200';
 
@@ -98,6 +127,7 @@ subprojects {
         ext.platformDir = file("$buildDir/$platform");
         ext.platformSrcDir = file("$platformDir/$explodedDirName");
         ext.platformInstallDir = file("$platformDir/install");
+        ext.platformDepsDir = file("$platformDir/deps");
 
         if (!gccExists(platform)) {
             def compiler = getGcc(platform);
@@ -111,7 +141,17 @@ subprojects {
             return;
         }
 
-        task ("unarchive-$platform", type: Copy, dependsOn: download) {
+        def platformConf = configurations.create "compile-$platform";
+        if (project.hasProperty("narDependencies")) {
+            narDependencies['all'].each {
+                dependencies.add "compile-$platform", it;
+            }
+            narDependencies[platform].each {
+                dependencies.add "compile-$platform", it;
+            }
+        }
+
+        task("unarchive-$platform", type: Copy, dependsOn: download) {
             inputs.files download.outputs.files.singleFile;
             outputs.files platformSrcDir;
 
@@ -123,8 +163,21 @@ subprojects {
             into platformDir;
         }
 
+        task("retrieveDependencies-$platform", type: Copy) {
+            from platformConf;
+            into platformDepsDir;
+
+            platformConf.incoming.afterResolve { ResolvableDependencies incoming ->
+                incoming.files.each { File file ->
+                    if (file.name.endsWith(".nar")) {
+                        from zipTree(file)
+                    }
+                }
+            }
+        }
+
         task("configure-$platform", type: Exec,
-                dependsOn: "unarchive-$platform")
+                dependsOn: ["unarchive-$platform", "retrieveDependencies-$platform"])
         {
             // Evaluate lazy GString to interpolate current
             // project values
@@ -138,7 +191,7 @@ subprojects {
             outputs.files file("$platformSrcDir/Makefile");
         }
 
-        task ("assemble-$platform", type: Exec,
+        task("assemble-$platform", type: Exec,
                 dependsOn: "configure-$platform")
         {
             logging.captureStandardOutput LogLevel.INFO;
@@ -148,7 +201,7 @@ subprojects {
             commandLine 'make', 'all', 'install';
         }
 
-        def platformPackage = task ("package-$platform", type: Zip,
+        def platformPackage = task("package-$platform", type: Zip,
                 dependsOn: "assemble-$platform")
         {
             from platformInstallDir;
