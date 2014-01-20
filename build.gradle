@@ -14,6 +14,35 @@ import de.undercouch.gradle.tasks.download.Download;
 
 ext.currentPlatform = getCurrentPlatform();
 
+project(':poco') {
+    version = '1.5.2';
+
+    ext {
+        archiveName = "poco-${version}-release.tar.gz";
+        vendorUrl = "https://github.com/pocoproject/poco/archive/$archiveName";
+        explodedDirName = "poco-poco-${version}-release";
+        targetPlatforms = ['x86_64-apple-darwin13.0.0'];
+
+        configureCommandLine = [
+            "./configure",
+            "--prefix=${-> platformInstallDir}",
+            "--no-tests",
+            "--no-samples",
+            "--static",
+            ];
+
+        assembleCommandLine = [
+            'make',
+            '-f',
+            'Makefile',
+            '-f',
+            'Makefile-custom',
+            'my_static_release',
+            'my_install',
+            ];
+    }
+}
+
 project(':libodb') {
     version = '2.3.0';
 
@@ -142,7 +171,7 @@ subprojects {
         }
 
         def platformConf = configurations.create "compile-$platform";
-        if (project.hasProperty("narDependencies")) {
+        if (project.hasProperty('narDependencies')) {
             narDependencies['all'].each {
                 dependencies.add "compile-$platform", it;
             }
@@ -151,16 +180,40 @@ subprojects {
             }
         }
 
-        task("unarchive-$platform", type: Copy, dependsOn: download) {
+        task("unarchive-$platform", dependsOn: download) {
             inputs.files download.outputs.files.singleFile;
-            outputs.files platformSrcDir;
+            outputs.upToDateWhen { platformSrcDir.exists() }
 
-            def f = download.outputs.files.singleFile;
-            def t = f.name.endsWith('.zip') ?
-                zipTree(f) : tarTree(f);
+            doLast {
+                copy {
+                    def f = download.outputs.files.singleFile;
+                    def t = f.name.endsWith('.zip') ?
+                        zipTree(f) : tarTree(f);
 
-            from t;
-            into platformDir;
+                    from t;
+                    into platformDir;
+                }
+            }
+        }
+
+        task("patch-$platform", dependsOn: "unarchive-$platform") {
+            outputs.files file("$platformSrcDir/.patched");
+
+            fileTree(file("$projectDir/patches")).include('**/*.patch').each { File file ->
+                doLast {
+                    exec {
+                        logging.captureStandardOutput LogLevel.INFO;
+                        logging.captureStandardError LogLevel.INFO;
+
+                        workingDir platformSrcDir;
+                        standardInput = new FileInputStream(file);
+                        commandLine 'patch', '-p1', '-t', '-N';
+                    }
+                }
+                doLast {
+                    new File("$platformSrcDir/.patched").createNewFile();
+                }
+            }
         }
 
         task("retrieveDependencies-$platform", type: Copy) {
@@ -177,7 +230,9 @@ subprojects {
         }
 
         task("configure-$platform", type: Exec,
-                dependsOn: ["unarchive-$platform", "retrieveDependencies-$platform"])
+                dependsOn: ["unarchive-$platform",
+                    "patch-$platform",
+                    "retrieveDependencies-$platform"])
         {
             // Evaluate lazy GString to interpolate current
             // project values
@@ -188,7 +243,13 @@ subprojects {
 
             workingDir platformSrcDir;
             commandLine cmdLine;
-            outputs.files file("$platformSrcDir/Makefile");
+
+            // Cannot use the following since some projects already come
+            // with a Makefile. Couldn't find a consistent choice across
+            // projects, thus commenting out. The downside is that the
+            // configure step will run on every build, which is acceptable
+            // since builds run rarely (only on upstream changes).
+            // outputs.files file("$platformSrcDir/Makefile");
         }
 
         task("assemble-$platform", type: Exec,
@@ -198,7 +259,12 @@ subprojects {
             logging.captureStandardError LogLevel.INFO;
 
             workingDir platformSrcDir;
-            commandLine 'make', 'all', 'install';
+
+            if (project.hasProperty('assembleCommandLine')) {
+                commandLine assembleCommandLine;
+            } else {
+                commandLine 'make', 'all', 'install';
+            }
         }
 
         def platformPackage = task("package-$platform", type: Zip,

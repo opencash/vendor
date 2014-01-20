@@ -1,3 +1,4 @@
+include 'poco'
 include 'libodb'
 include 'libodb-sqlite'
 include 'sqlite3'
