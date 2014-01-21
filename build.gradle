@@ -114,6 +114,32 @@ project(':sqlite3') {
     }
 }
 
+project(':gmock') {
+    version = '1.7.0';
+
+    ext {
+        archiveName = "gmock-${version}.zip";
+        vendorUrl = "https://googlemock.googlecode.com/files/$archiveName";
+        explodedDirName = "gmock-${version}";
+        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+
+        configureCommandLine = [
+            "./configure",
+            "--prefix=${-> platformInstallDir}",
+            "--host=${-> platform}",
+            "--build=${-> currentPlatform}",
+            "--disable-shared",
+            "--enable-static",
+            ];
+
+        assembleCommandLine = [
+            'make',
+            'all',
+            'install-libLTLIBRARIES',
+            ];
+    }
+}
+
 // apply the following to all subprojects in settings.gradle
 // using the values specified above
 subprojects {
@@ -184,6 +210,12 @@ subprojects {
             inputs.files download.outputs.files.singleFile;
             outputs.upToDateWhen { platformSrcDir.exists() }
 
+            // A task of type Copy would mess with outputs field and hence
+            // confuse upToDateWhen, so we use a separate closure. By doing
+            // that, platformDir gets evaluated at runtime and usually doesn't
+            // correspond to the value of platform anymore. We bind the scope
+            // of platformDir through use of an intermediate variable
+            def destDir = platformDir;
             doLast {
                 copy {
                     def f = download.outputs.files.singleFile;
@@ -191,7 +223,7 @@ subprojects {
                         zipTree(f) : tarTree(f);
 
                     from t;
-                    into platformDir;
+                    into destDir;
                 }
             }
         }
