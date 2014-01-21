@@ -114,6 +114,32 @@ project(':sqlite3') {
     }
 }
 
+project(':gtest') {
+    version = '1.7.0';
+
+    ext {
+        archiveName = "gtest-${version}.zip";
+        vendorUrl = "https://googletest.googlecode.com/files/$archiveName";
+        explodedDirName = "gtest-${version}";
+        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+
+        configureCommandLine = [
+            "./configure",
+            "--prefix=${-> platformInstallDir}",
+            "--host=${-> platform}",
+            "--build=${-> currentPlatform}",
+            "--disable-shared",
+            "--enable-static",
+            ];
+
+        assembleCommandLine = [
+            'make',
+            'all',
+            'install-libLTLIBRARIES',
+            ];
+    }
+}
+
 project(':gmock') {
     version = '1.7.0';
 
