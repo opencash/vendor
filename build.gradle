@@ -136,6 +136,7 @@ project(':gtest') {
             'make',
             'all',
             'install-libLTLIBRARIES',
+            'install-pkgincludeHEADERS',
             ];
     }
 }
@@ -162,6 +163,7 @@ project(':gmock') {
             'make',
             'all',
             'install-libLTLIBRARIES',
+            'install-pkgincludeHEADERS',
             ];
     }
 }
@@ -234,7 +236,9 @@ subprojects {
 
         task("unarchive-$platform", dependsOn: download) {
             inputs.files download.outputs.files.singleFile;
-            outputs.upToDateWhen { platformSrcDir.exists() }
+            // Bind scope of platformSrcDir
+            def platSrcDir = platformSrcDir;
+            outputs.upToDateWhen { platSrcDir.exists() }
 
             // A task of type Copy would mess with outputs field and hence
             // confuse upToDateWhen, so we use a separate closure. By doing
@@ -258,18 +262,21 @@ subprojects {
             outputs.files file("$platformSrcDir/.patched");
 
             fileTree(file("$projectDir/patches")).include('**/*.patch').each { File file ->
+                // Bind scope of platformSrcDir
+                def destDir = platformSrcDir;
                 doLast {
                     exec {
                         logging.captureStandardOutput LogLevel.INFO;
                         logging.captureStandardError LogLevel.INFO;
 
-                        workingDir platformSrcDir;
-                        standardInput = new FileInputStream(file);
-                        commandLine 'patch', '-p1', '-t', '-N';
+                        workingDir destDir;
+                        /* standardInput = new FileInputStream(file); */
+                        commandLine 'patch', '--strip=1', '--batch',
+                            '--forward', "--input=$file", '--verbose';
                     }
                 }
                 doLast {
-                    new File("$platformSrcDir/.patched").createNewFile();
+                    new File("$destDir/.patched").createNewFile();
                 }
             }
         }
