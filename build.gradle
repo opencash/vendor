@@ -21,10 +21,16 @@ project(':poco') {
         archiveName = "poco-${version}-release.tar.gz";
         vendorUrl = "https://github.com/pocoproject/poco/archive/$archiveName";
         explodedDirName = "poco-poco-${version}-release";
-        targetPlatforms = ['x86_64-apple-darwin13.0.0'];
+        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+
+        configForPlatform = [
+            'x86_64-apple-darwin13.0.0': '',
+            'arm-linux-androideabi': 'Android',
+            ];
 
         configureCommandLine = [
             "./configure",
+            "--config=${-> configForPlatform[platform]}",
             "--prefix=${-> platformInstallDir}",
             "--no-tests",
             "--no-samples",
