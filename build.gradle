@@ -143,6 +143,7 @@ project(':gtest') {
             'all',
             'install-libLTLIBRARIES',
             'install-pkgincludeHEADERS',
+            'install-pkginclude_internalHEADERS',
             ];
     }
 }
@@ -170,6 +171,7 @@ project(':gmock') {
             'all',
             'install-libLTLIBRARIES',
             'install-pkgincludeHEADERS',
+            'install-pkginclude_internalHEADERS',
             ];
     }
 }
