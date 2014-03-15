@@ -1,4 +1,4 @@
-def localIvyRepoUri = uri("$rootProject.projectDir/../ivy_repository");
+def localIvyRepoUri = uri("$rootProject.projectDir/../ivy_repo");
 
 buildscript {
   repositories {
@@ -21,11 +21,11 @@ project(':poco') {
         archiveName = "poco-${version}-release.tar.gz";
         vendorUrl = "https://github.com/pocoproject/poco/archive/$archiveName";
         explodedDirName = "poco-poco-${version}-release";
-        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+        targetPlatforms = ['osx-x86_64', 'android-arm'];
 
         configForPlatform = [
-            'x86_64-apple-darwin13.0.0': '',
-            'arm-linux-androideabi': 'Android',
+            'osx-x86_64': '',
+            'android-arm': 'Android',
             ];
 
         configureCommandLine = [
@@ -56,12 +56,17 @@ project(':libodb') {
         archiveName = "libodb-${version}.zip";
         vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName";
         explodedDirName = "libodb-${version}";
-        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+        targetPlatforms = ['osx-x86_64', 'android-arm'];
+
+        configForPlatform = [
+            'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'android-arm': 'arm-linux-androideabi',
+            ];
 
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> platform}",
+            "--host=${-> configForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -77,18 +82,23 @@ project(':libodb-sqlite') {
         archiveName = "libodb-sqlite-${version}.zip";
         vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName";
         explodedDirName = "libodb-sqlite-${version}";
-        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+        targetPlatforms = ['osx-x86_64', 'android-arm'];
         narDependencies = [
             'all':
-                ["me.sgeb.opencash.vendor:libodb:$version:${-> platform}@nar"],
-            'arm-linux-androideabi':
-                ["me.sgeb.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
+                ["com.github.opencash.vendor:libodb:$version:${-> platform}@nar"],
+            'android-arm':
+                ["com.github.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
+            ];
+
+        configForPlatform = [
+            'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'android-arm': 'arm-linux-androideabi',
             ];
 
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> platform}",
+            "--host=${-> configForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -106,12 +116,16 @@ project(':sqlite3') {
         archiveName = "sqlite-autoconf-${version}.tar.gz";
         vendorUrl = "http://www.sqlite.org/2013/$archiveName";
         explodedDirName = "sqlite-autoconf-${version}";
-        targetPlatforms = ['arm-linux-androideabi'];
+        targetPlatforms = ['android-arm'];
+
+        configForPlatform = [
+            'android-arm': 'arm-linux-androideabi',
+            ];
 
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> platform}",
+            "--host=${-> configForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -127,12 +141,17 @@ project(':gtest') {
         archiveName = "gtest-${version}.zip";
         vendorUrl = "https://googletest.googlecode.com/files/$archiveName";
         explodedDirName = "gtest-${version}";
-        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+        targetPlatforms = ['osx-x86_64', 'android-arm'];
+
+        configForPlatform = [
+            'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'android-arm': 'arm-linux-androideabi',
+            ];
 
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> platform}",
+            "--host=${-> configForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -155,12 +174,17 @@ project(':gmock') {
         archiveName = "gmock-${version}.zip";
         vendorUrl = "https://googlemock.googlecode.com/files/$archiveName";
         explodedDirName = "gmock-${version}";
-        targetPlatforms = ['x86_64-apple-darwin13.0.0', 'arm-linux-androideabi'];
+        targetPlatforms = ['osx-x86_64', 'android-arm'];
+
+        configForPlatform = [
+            'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'android-arm': 'arm-linux-androideabi',
+            ];
 
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> platform}",
+            "--host=${-> configForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -182,7 +206,7 @@ subprojects {
     apply plugin: 'cpp';
     apply plugin: 'ivy-publish';
 
-    group = 'me.sgeb.opencash.vendor';
+    group = 'com.github.opencash.vendor';
 
     repositories {
         ivy {
@@ -220,7 +244,7 @@ subprojects {
         ext.platformInstallDir = file("$platformDir/install");
         ext.platformDepsDir = file("$platformDir/deps");
 
-        if (!gccExists(platform)) {
+        if (false) { // !gccExists(platform)) {
             def compiler = getGcc(platform);
             logger.info("==============");
             logger.info("Configuring build for platform '$platform':");
