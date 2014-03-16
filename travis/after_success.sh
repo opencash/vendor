@@ -11,7 +11,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
     ./update-directory-index.sh
     git add -f .
-    git commit -m "Travis-CI: build $TRAVIS_BUILD_NUMBER pushed"
+    git commit -m "Travis-CI: build $TRAVIS_REPO_SLUG #$TRAVIS_BUILD_NUMBER"
     git push -fq origin gh-pages
     echo "done"
 fi
