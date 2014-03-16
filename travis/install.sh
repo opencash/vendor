@@ -3,7 +3,7 @@
 set -x
 set -e
 
-. ./env.sh
+source $(dirname $0)/env.sh
 
 echo -n "Setting up git... "
 git config --global user.name $GIT_NAME

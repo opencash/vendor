@@ -3,7 +3,8 @@
 set -x
 set -e
 
-. ./env.sh
+source $(dirname $0)/env.sh
+
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
     echo -n "Pushing changes to ivy_repo... "
