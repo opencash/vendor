@@ -5,6 +5,9 @@ set -e
 
 [ "$TRAVIS_COMMIT" ] && source travis/env.sh
 
+GRADLE_FLAGS=
+[ "$TRAVIS_COMMIT" ] && GRADLE_FLAGS='--no-color -q'
+
 for p in poco sqlite3 libodb libodb-sqlite gtest gmock; do
-    ./gradlew --no-color -q ${p}:publish
+    ./gradlew $GRADLE_FLAGS ${p}:publish
 done
