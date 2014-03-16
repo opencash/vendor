@@ -12,6 +12,7 @@ buildscript {
 }
 
 import de.undercouch.gradle.tasks.download.Download
+import org.gradle.api.publish.ivy.internal.dependency.DefaultIvyDependency
 
 ext.currentPlatform = getCurrentPlatform()
 
@@ -89,11 +90,11 @@ project(':libodb-sqlite') {
 
         narDependencies = [
             'all':
-                ["com.github.opencash.vendor:libodb:$version:${-> platform}@nar"],
+                [[group: "com.github.opencash.vendor", name: "libodb", version: "$version", configuration: "${-> platform}"]],
             'linux-amd64':
-                ["com.github.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
+                [[group: "com.github.opencash.vendor", name: "sqlite3", version: "3080200", configuration: "${-> platform}"]],
             'android-arm':
-                ["com.github.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
+                [[group: "com.github.opencash.vendor", name: "sqlite3", version: "3080200", configuration: "${-> platform}"]],
             ]
 
         configForPlatform = [
@@ -383,13 +384,25 @@ subprojects {
             extension 'nar'
         }
 
+        def boundPlatform = platform
         publishing {
             publications {
-                def p = findByName(project.name)
-                if (p == null) {
-                    p = create(project.name, IvyPublication)
+                def pub = findByName(project.name)
+                if (pub == null) {
+                    pub = create(project.name, IvyPublication)
                 }
-                p.artifact platformPackage
+
+                def pubConf = pub.configurations.maybeCreate(boundPlatform)
+                pub.artifact(platformPackage) {
+                   conf = pubConf.name
+                }
+
+                platformConf.allDependencies.withType(ModuleDependency).each { dep ->
+                    def ivyDep = new DefaultIvyDependency(
+                        dep.group, dep.name, dep.version,
+                        "${pubConf.name}->${dep.configuration}", dep.artifacts)
+                    pub.dependencies.add ivyDep
+                }
             }
         }
     }
