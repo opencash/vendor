@@ -26,7 +26,7 @@ project(':poco') {
         targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
         tripletForPlatform = [
-            'osx-x86_64': '',
+            'osx-x86_64': 'Darwin-clang-libc++',
             'linux-amd64': '',
             'android-arm': 'Android',
             ]
@@ -67,6 +67,12 @@ project(':libodb') {
             'android-arm': 'arm-linux-androideabi',
             ]
 
+        cxxflagsForPlatform = [
+            'osx-x86_64': '-stdlib=libc++',
+            'linux-amd64': '',
+            'android-arm': '',
+            ]
+
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
@@ -75,6 +81,7 @@ project(':libodb') {
             "--disable-shared",
             "--enable-static",
             "--disable-threads",
+            "CXXFLAGS=${-> cxxflagsForPlatform[platform]}",
             ]
     }
 }
@@ -103,6 +110,12 @@ project(':libodb-sqlite') {
             'android-arm': 'arm-linux-androideabi',
             ]
 
+        cxxflagsForPlatform = [
+            'osx-x86_64': '-stdlib=libc++',
+            'linux-amd64': '',
+            'android-arm': '',
+            ]
+
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
@@ -113,6 +126,7 @@ project(':libodb-sqlite') {
             "--disable-threads",
             "LDFLAGS=-L${-> platformDepsDir}/lib",
             "CPPFLAGS=-I${-> platformDepsDir}/include",
+            "CXXFLAGS=${-> cxxflagsForPlatform[platform]}",
             ]
     }
 }
@@ -171,7 +185,7 @@ project(':gtest') {
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
-            "CPPFLAGS='${-> cxxflagsForPlatform[platform]}'",
+            "CXXFLAGS=${-> cxxflagsForPlatform[platform]}",
             ]
 
         assembleCommandLine = [
@@ -212,7 +226,7 @@ project(':gmock') {
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
-            "CPPFLAGS='${-> cxxflagsForPlatform[platform]}'",
+            "CXXFLAGS=${-> cxxflagsForPlatform[platform]}",
             ]
 
         assembleCommandLine = [
