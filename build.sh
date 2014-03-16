@@ -3,7 +3,7 @@
 set -x
 set -e
 
-[ -z "$TRAVIS_COMMIT" ] && source travis/env.sh
+[ "$TRAVIS_COMMIT" ] && source travis/env.sh
 
 env
 
