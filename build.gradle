@@ -1,4 +1,5 @@
 def localIvyRepoUri = uri("$rootProject.projectDir/../ivy_repo")
+if (System.env.IVY_REPO) { localIvyRepoUri = System.env.IVY_REPO }
 
 buildscript {
   repositories {
@@ -21,10 +22,11 @@ project(':poco') {
         archiveName = "poco-${version}-release.tar.gz"
         vendorUrl = "https://github.com/pocoproject/poco/archive/$archiveName"
         explodedDirName = "poco-poco-${version}-release"
-        targetPlatforms = ['osx-x86_64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
         configForPlatform = [
             'osx-x86_64': '',
+            'linux-amd64': '',
             'android-arm': 'Android',
             ]
 
@@ -56,10 +58,11 @@ project(':libodb') {
         archiveName = "libodb-${version}.zip"
         vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName"
         explodedDirName = "libodb-${version}"
-        targetPlatforms = ['osx-x86_64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
         configForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
@@ -82,16 +85,20 @@ project(':libodb-sqlite') {
         archiveName = "libodb-sqlite-${version}.zip"
         vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName"
         explodedDirName = "libodb-sqlite-${version}"
-        targetPlatforms = ['osx-x86_64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
+
         narDependencies = [
             'all':
                 ["com.github.opencash.vendor:libodb:$version:${-> platform}@nar"],
+            'linux-amd64':
+                ["com.github.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
             'android-arm':
                 ["com.github.opencash.vendor:sqlite3:3080200:${-> platform}@nar"],
             ]
 
         configForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
@@ -116,9 +123,10 @@ project(':sqlite3') {
         archiveName = "sqlite-autoconf-${version}.tar.gz"
         vendorUrl = "http://www.sqlite.org/2013/$archiveName"
         explodedDirName = "sqlite-autoconf-${version}"
-        targetPlatforms = ['android-arm']
+        targetPlatforms = ['linux-amd64', 'android-arm']
 
         configForPlatform = [
+            'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
@@ -141,10 +149,11 @@ project(':gtest') {
         archiveName = "gtest-${version}.zip"
         vendorUrl = "https://googletest.googlecode.com/files/$archiveName"
         explodedDirName = "gtest-${version}"
-        targetPlatforms = ['osx-x86_64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
         configForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
@@ -174,10 +183,11 @@ project(':gmock') {
         archiveName = "gmock-${version}.zip"
         vendorUrl = "https://googlemock.googlecode.com/files/$archiveName"
         explodedDirName = "gmock-${version}"
-        targetPlatforms = ['osx-x86_64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
         configForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
+            'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
@@ -302,7 +312,6 @@ subprojects {
                         logging.captureStandardError LogLevel.INFO
 
                         workingDir destDir
-                        /* standardInput = new FileInputStream(file); */
                         commandLine 'patch', '--strip=1', '--batch',
                             '--forward', "--input=$file", '--verbose'
                     }
@@ -364,10 +373,10 @@ subprojects {
             }
         }
 
-        def platformPackage = task("package-$platform", type: Zip,
-                dependsOn: "assemble-$platform")
-        {
+        def platformPackage = task("package-$platform", type: Zip) {
+            dependsOn "assemble-$platform"
             from platformInstallDir
+
             baseName project.name
             version version
             classifier platform

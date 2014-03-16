@@ -1,0 +1,11 @@
+language: objective-c
+install:
+    - travis/install.sh
+script:
+    - ./build.sh
+after_script:
+    - travis/after_script.sh
+
+env:
+  global:
+    secure: R5CupwhhHD2vMu/TsXTFWcLRjUac1a8dSSe1RLBy0HIqO4WT9tQYOd++cLFIqhNuIk41F0SaICAuWwTnuIbXM/1BJubhOn8I4J+fk4ypCnZNB7PevSjXfhkF74jGCyCf/0Qsvtu0s8W22nsNjHj5MVbY+3eXjyJgYgcNeYHz1RM=

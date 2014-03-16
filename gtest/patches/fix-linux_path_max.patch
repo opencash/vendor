@@ -1,0 +1,12 @@
+diff -Naur gtest-1.7.0.orig/src/gtest-filepath.cc gtest-1.7.0/src/gtest-filepath.cc
+--- gtest-1.7.0.orig/src/gtest-filepath.cc	2013-09-18 14:48:30.000000000 -0300
++++ gtest-1.7.0/src/gtest-filepath.cc	2014-03-15 23:17:39.000000000 -0300
+@@ -43,6 +43,8 @@
+ #elif GTEST_OS_SYMBIAN
+ // Symbian OpenC has PATH_MAX in sys/syslimits.h
+ # include <sys/syslimits.h>
++#elif GTEST_OS_LINUX && !GTEST_OS_LINUX_ANDROID
++# include <linux/limits.h>
+ #else
+ # include <limits.h>
+ # include <climits>  // Some Linux distributions define PATH_MAX here.
