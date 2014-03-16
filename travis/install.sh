@@ -29,11 +29,11 @@ mkdir -p $TOOLCHAINS_DIR
 )
 echo "done"
 
-echo -n "Installing Android NDK... "
+echo -n "Installing Android toolchain... "
 (
     cd $TOOLCHAINS_DIR
-    TOOLCHAIN=android-ndk-r9d-darwin-x86_64
-    curl -O http://dl.google.com/android/ndk/${TOOLCHAIN}.tar.bz2
+    TOOLCHAIN=arm-linux-androideabi-gcc-4.8-android-14
+    curl -O https://dl.dropboxusercontent.com/u/8225764/opencash-build-support/${TOOLCHAIN}.tar.bz2
     tar xjf ${TOOLCHAIN}.tar.bz2
 )
 echo "done"
