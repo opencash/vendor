@@ -1,7 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -x
 set -e
+
+env
 
 [ "$TRAVIS" == "true" ] && source travis/env.sh
 
