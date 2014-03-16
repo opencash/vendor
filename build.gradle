@@ -25,7 +25,7 @@ project(':poco') {
         explodedDirName = "poco-poco-${version}-release"
         targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
-        configForPlatform = [
+        tripletForPlatform = [
             'osx-x86_64': '',
             'linux-amd64': '',
             'android-arm': 'Android',
@@ -33,7 +33,7 @@ project(':poco') {
 
         configureCommandLine = [
             "./configure",
-            "--config=${-> configForPlatform[platform]}",
+            "--config=${-> tripletForPlatform[platform]}",
             "--prefix=${-> platformInstallDir}",
             "--no-tests",
             "--no-samples",
@@ -61,7 +61,7 @@ project(':libodb') {
         explodedDirName = "libodb-${version}"
         targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
-        configForPlatform = [
+        tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
@@ -70,7 +70,7 @@ project(':libodb') {
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> configForPlatform[platform]}",
+            "--host=${-> tripletForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -97,7 +97,7 @@ project(':libodb-sqlite') {
                 [[group: "com.github.opencash.vendor", name: "sqlite3", version: "3080200", configuration: "${-> platform}"]],
             ]
 
-        configForPlatform = [
+        tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
@@ -106,7 +106,7 @@ project(':libodb-sqlite') {
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> configForPlatform[platform]}",
+            "--host=${-> tripletForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -126,7 +126,7 @@ project(':sqlite3') {
         explodedDirName = "sqlite-autoconf-${version}"
         targetPlatforms = ['linux-amd64', 'android-arm']
 
-        configForPlatform = [
+        tripletForPlatform = [
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
@@ -134,7 +134,7 @@ project(':sqlite3') {
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> configForPlatform[platform]}",
+            "--host=${-> tripletForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
@@ -152,19 +152,26 @@ project(':gtest') {
         explodedDirName = "gtest-${version}"
         targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
-        configForPlatform = [
+        tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
+        cxxflagsForPlatform = [
+            'osx-x86_64': '-stdlib=libc++',
+            'linux-amd64': '',
+            'android-arm': '',
+            ]
+
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> configForPlatform[platform]}",
+            "--host=${-> tripletForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
+            "CPPFLAGS='${-> cxxflagsForPlatform[platform]}'",
             ]
 
         assembleCommandLine = [
@@ -186,19 +193,26 @@ project(':gmock') {
         explodedDirName = "gmock-${version}"
         targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
 
-        configForPlatform = [
+        tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
             ]
 
+        cxxflagsForPlatform = [
+            'osx-x86_64': '-stdlib=libc++',
+            'linux-amd64': '',
+            'android-arm': '',
+            ]
+
         configureCommandLine = [
             "./configure",
             "--prefix=${-> platformInstallDir}",
-            "--host=${-> configForPlatform[platform]}",
+            "--host=${-> tripletForPlatform[platform]}",
             "--build=${-> currentPlatform}",
             "--disable-shared",
             "--enable-static",
+            "CPPFLAGS='${-> cxxflagsForPlatform[platform]}'",
             ]
 
         assembleCommandLine = [
