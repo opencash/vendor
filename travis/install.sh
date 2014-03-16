@@ -6,10 +6,10 @@ set -e
 source $(dirname $0)/env.sh
 
 echo -n "Setting up git... "
+set +x
 git config --global user.name $GIT_NAME
 git config --global user.email $GIT_EMAIL
 git config --global credential.helper "store --file=$GIT_CREDENTIALS"
-set +x
 echo "https://${GH_TOKEN}:@github.com" > $GIT_CREDENTIALS
 set -x
 echo "done"
@@ -35,4 +35,5 @@ echo -n "Installing Android NDK... "
     TOOLCHAIN=android-ndk-r9d-darwin-x86_64
     curl -O http://dl.google.com/android/ndk/${TOOLCHAIN}.tar.bz2
     tar xjf ${TOOLCHAIN}.tar.bz2
+)
 echo "done
