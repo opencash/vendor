@@ -36,4 +36,4 @@ echo -n "Installing Android NDK... "
     curl -O http://dl.google.com/android/ndk/${TOOLCHAIN}.tar.bz2
     tar xjf ${TOOLCHAIN}.tar.bz2
 )
-echo "done
+echo "done"
