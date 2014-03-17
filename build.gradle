@@ -1,4 +1,4 @@
-def localIvyRepoUri = uri("$rootProject.projectDir/../ivy_repo")
+def localIvyRepoUri = uri("$rootProject.projectDir/../local_ivy_repo")
 if (System.env.IVY_REPO_DIR) { localIvyRepoUri = System.env.IVY_REPO_DIR }
 
 buildscript {
