@@ -1,0 +1,73 @@
+diff -Naur poco-poco-1.5.2-release.orig/build/config/x86_64-pc-linux poco-poco-1.5.2-release/build/config/x86_64-pc-linux
+--- poco-poco-1.5.2-release.orig/build/config/x86_64-pc-linux	1969-12-31 21:00:00.000000000 -0300
++++ poco-poco-1.5.2-release/build/config/x86_64-pc-linux	2014-03-17 21:10:10.000000000 -0300
+@@ -0,0 +1,69 @@
++#
++# Cross-compile to x86_64-pc-linux
++#
++
++#
++# General Settings
++#
++LINKMODE ?= SHARED
++POCO_TARGET_OSNAME = Linux
++POCO_TARGET_OSARCH = x86_64
++
++
++#
++# Define Tools
++#
++CC      = x86_64-pc-linux-gcc
++CXX     = x86_64-pc-linux-g++
++LINK    = $(CXX)
++LIB     = x86_64-pc-linux-ar -cr
++RANLIB  = x86_64-pc-linux-ranlib
++SHLIB   = $(CXX) -shared -Wl,-soname,$(notdir $@) -o $@
++SHLIBLN = $(POCO_BASE)/build/script/shlibln
++STRIP   = x86_64-pc-linux-strip
++DEP     = $(POCO_BASE)/build/script/makedepend.gcc 
++SHELL   = sh
++RM      = rm -rf
++CP      = cp
++MKDIR   = mkdir -p
++
++#
++# Extension for Shared Libraries
++#
++SHAREDLIBEXT     = .so.$(target_version)
++SHAREDLIBLINKEXT = .so
++
++#
++# Compiler and Linker Flags
++#
++CFLAGS          = 
++CFLAGS32        =
++CFLAGS64        =
++CXXFLAGS        = -Wall -Wno-sign-compare
++CXXFLAGS32      =
++CXXFLAGS64      =
++LINKFLAGS       =
++LINKFLAGS32     =
++LINKFLAGS64     =
++STATICOPT_CC    =
++STATICOPT_CXX   =
++STATICOPT_LINK  = -static
++SHAREDOPT_CC    = -fPIC
++SHAREDOPT_CXX   = -fPIC
++SHAREDOPT_LINK  = -Wl,-rpath,$(LIBPATH)
++DEBUGOPT_CC     = -g -D_DEBUG
++DEBUGOPT_CXX    = -g -D_DEBUG
++DEBUGOPT_LINK   = -g
++RELEASEOPT_CC   = -O2 -DNDEBUG
++RELEASEOPT_CXX  = -O2 -DNDEBUG
++RELEASEOPT_LINK = -O2
++
++#
++# System Specific Flags
++#
++SYSFLAGS = -D_XOPEN_SOURCE=500 -D_REENTRANT -D_THREAD_SAFE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -DPOCO_HAVE_FD_EPOLL
++
++#
++# System Specific Libraries
++#
++SYSLIBS  = -lpthread -ldl -lrt
