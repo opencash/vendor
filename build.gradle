@@ -283,18 +283,6 @@ subprojects {
         ext.platformInstallDir = file("$platformDir/install")
         ext.platformDepsDir = file("$platformDir/deps")
 
-        if (false) { // !gccExists(platform)) {
-            def compiler = getGcc(platform)
-            logger.info("==============")
-            logger.info("Configuring build for platform '$platform':")
-            logger.info("Cross-compiling but could not find '$compiler'.")
-            logger.info("Please add your cross-compilation toolchain"
-                        + " to your \$PATH")
-            logger.info("Skipping platform '$platform'")
-            logger.info("==============")
-            return
-        }
-
         def platformConf = configurations.create "compile-$platform"
         if (project.hasProperty('narDependencies')) {
             narDependencies['all'].each {
@@ -444,23 +432,4 @@ def getCurrentPlatform() {
         standardOutput = stdout
     }
     stdout.toString().trim()
-}
-
-def getGcc(platform) {
-    def compiler = "g++"
-    if (platform != currentPlatform) {
-        compiler = "$platform-$compiler"
-    }
-    return compiler
-}
-
-def gccExists(platform) {
-    def compiler = getGcc(platform)
-    def stdout = new ByteArrayOutputStream()
-    def findCompiler = exec {
-        commandLine 'which', "$compiler"
-        ignoreExitValue true
-        standardOutput = stdout
-    }
-    findCompiler.exitValue == 0
 }
