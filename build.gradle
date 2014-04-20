@@ -15,6 +15,8 @@ import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.publish.ivy.internal.dependency.DefaultIvyDependency
 
 ext.currentPlatform = getCurrentPlatform()
+ext.latestIPhoneOsSysRoot = getLatestIPhoneOsSysRoot()
+ext.latestIPhoneSimulatorSysRoot = getLatestIPhoneSimulatorSysRoot()
 
 project(':poco') {
     version = '1.5.2'
@@ -23,12 +25,14 @@ project(':poco') {
         archiveName = "poco-${version}-release.tar.gz"
         vendorUrl = "https://github.com/pocoproject/poco/archive/$archiveName"
         explodedDirName = "poco-poco-${version}-release"
-        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm', 'ios-arm', 'ios-i386']
 
         tripletForPlatform = [
             'osx-x86_64': 'Darwin-clang-libc++',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'Android',
+            'ios-arm': 'iPhone-clang',
+            'ios-i386': 'iPhoneSimulator-clang',
             ]
 
         configureCommandLine = [
@@ -59,18 +63,23 @@ project(':libodb') {
         archiveName = "libodb-${version}.zip"
         vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName"
         explodedDirName = "libodb-${version}"
-        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm', 'ios-arm', 'ios-i386']
 
         tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
+            // config.sub does not recognise ios or iphone
+            'ios-arm': 'armv7-macos',
+            'ios-i386': 'i386-macos',
             ]
 
         cxxflagsForPlatform = [
             'osx-x86_64': '-stdlib=libc++',
             'linux-amd64': '',
             'android-arm': '',
+            'ios-arm': "-arch armv7 -isysroot ${-> latestIPhoneOsSysRoot} -miphoneos-version-min=6.0",
+            'ios-i386': "-arch i386 -isysroot ${-> latestIPhoneSimulatorSysRoot} -miphoneos-version-min=6.0",
             ]
 
         configureCommandLine = [
@@ -93,7 +102,7 @@ project(':libodb-sqlite') {
         archiveName = "libodb-sqlite-${version}.zip"
         vendorUrl = "http://www.codesynthesis.com/download/odb/2.3/$archiveName"
         explodedDirName = "libodb-sqlite-${version}"
-        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm', 'ios-arm', 'ios-i386']
 
         narDependencies = [
             'all':
@@ -108,12 +117,17 @@ project(':libodb-sqlite') {
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
+            // config.sub does not recognise ios or iphone
+            'ios-arm': 'armv7-macos',
+            'ios-i386': 'i386-macos',
             ]
 
         cxxflagsForPlatform = [
             'osx-x86_64': '-stdlib=libc++',
             'linux-amd64': '',
             'android-arm': '',
+            'ios-arm': "-arch armv7 -isysroot ${-> latestIPhoneOsSysRoot} -miphoneos-version-min=6.0",
+            'ios-i386': "-arch i386 -isysroot ${-> latestIPhoneSimulatorSysRoot} -miphoneos-version-min=6.0",
             ]
 
         configureCommandLine = [
@@ -164,18 +178,23 @@ project(':gtest') {
         archiveName = "gtest-${version}.zip"
         vendorUrl = "https://googletest.googlecode.com/files/$archiveName"
         explodedDirName = "gtest-${version}"
-        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm', 'ios-arm', 'ios-i386']
 
         tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
+            // gtest config.sub does not recognise ios or iphone, nor armv7
+            'ios-arm': 'arm-macos',
+            'ios-i386': 'i386-macos',
             ]
 
         cxxflagsForPlatform = [
             'osx-x86_64': '-stdlib=libc++',
             'linux-amd64': '',
             'android-arm': '',
+            'ios-arm': "-arch armv7 -isysroot ${-> latestIPhoneOsSysRoot} -miphoneos-version-min=6.0",
+            'ios-i386': "-arch i386 -isysroot ${-> latestIPhoneSimulatorSysRoot} -miphoneos-version-min=6.0",
             ]
 
         configureCommandLine = [
@@ -205,18 +224,23 @@ project(':gmock') {
         archiveName = "gmock-${version}.zip"
         vendorUrl = "https://googlemock.googlecode.com/files/$archiveName"
         explodedDirName = "gmock-${version}"
-        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm']
+        targetPlatforms = ['osx-x86_64', 'linux-amd64', 'android-arm', 'ios-arm', 'ios-i386']
 
         tripletForPlatform = [
             'osx-x86_64': 'x86_64-apple-darwin13.0.0',
             'linux-amd64': 'x86_64-pc-linux',
             'android-arm': 'arm-linux-androideabi',
+            // gmock config.sub does not recognise ios or iphone, nor armv7
+            'ios-arm': 'arm-macos',
+            'ios-i386': 'i386-macos',
             ]
 
         cxxflagsForPlatform = [
             'osx-x86_64': '-stdlib=libc++',
             'linux-amd64': '',
             'android-arm': '',
+            'ios-arm': "-arch armv7 -isysroot ${-> latestIPhoneOsSysRoot} -miphoneos-version-min=6.0",
+            'ios-i386': "-arch i386 -isysroot ${-> latestIPhoneSimulatorSysRoot} -miphoneos-version-min=6.0",
             ]
 
         configureCommandLine = [
@@ -432,4 +456,14 @@ def getCurrentPlatform() {
         standardOutput = stdout
     }
     stdout.toString().trim()
+}
+
+def getLatestIPhoneOsSysRoot() {
+    def sdksDir = new File("/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/")
+    sdksDir.listFiles().sort().last()
+}
+
+def getLatestIPhoneSimulatorSysRoot() {
+    def sdksDir = new File("/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/")
+    sdksDir.listFiles().sort().last()
 }
